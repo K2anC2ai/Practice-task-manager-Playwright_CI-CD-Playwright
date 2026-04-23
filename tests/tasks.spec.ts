@@ -63,8 +63,29 @@ test.describe('Task CRUD', () => {
 
     const countBefore = await page.getByTestId('task-card').count();
     await page.getByTestId('task-delete-btn').first().click();
+    // confirm dialog appears — click confirm
+    await page.getByTestId('confirm-delete-btn').click();
 
     await expect(page.getByTestId('task-card')).toHaveCount(countBefore - 1);
+  });
+
+  test('TC-TASK-11: confirm dialog ปรากฏเมื่อกด delete และ cancel ไม่ลบ task', async ({ page }) => {
+    await page.goto('/tasks');
+
+    await page.getByTestId('create-task-btn').click();
+    await page.getByTestId('task-title-input').fill('Should not be deleted');
+    await page.getByTestId('task-submit-btn').click();
+
+    const countBefore = await page.getByTestId('task-card').count();
+
+    // กด delete — dialog ต้องปรากฏ
+    await page.getByTestId('task-delete-btn').first().click();
+    await expect(page.getByTestId('confirm-dialog')).toBeVisible();
+
+    // กด cancel — task ยังอยู่
+    await page.getByTestId('confirm-cancel-btn').click();
+    await expect(page.getByTestId('confirm-dialog')).not.toBeVisible();
+    await expect(page.getByTestId('task-card')).toHaveCount(countBefore);
   });
 
   test('TC-TASK-05: สร้าง task พร้อม description และ status IN_PROGRESS', async ({ page }) => {
