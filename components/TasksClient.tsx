@@ -179,8 +179,16 @@ export default function TasksClient() {
         <div className="text-center py-16 text-gray-400 text-sm">Loading...</div>
       ) : tasks.length === 0 ? (
         <div data-testid="empty-state" className="text-center py-16 text-gray-400">
-          <p className="text-4xl mb-3">✓</p>
-          <p className="text-sm">No tasks yet. Create your first one!</p>
+          <p className="text-4xl mb-3">{filterPriority || filterStatus ? '🔍' : '✓'}</p>
+          <p data-testid="empty-state-message" className="text-sm">
+            {filterPriority && filterStatus
+              ? `No ${filterPriority} priority tasks with status ${filterStatus.replace('_', ' ')}`
+              : filterPriority
+              ? `No ${filterPriority} priority tasks`
+              : filterStatus
+              ? `No ${filterStatus.replace('_', ' ')} tasks`
+              : 'No tasks yet. Create your first one!'}
+          </p>
         </div>
       ) : (
         <div data-testid="task-list" className="space-y-2">

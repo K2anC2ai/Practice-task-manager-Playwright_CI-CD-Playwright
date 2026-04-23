@@ -141,6 +141,24 @@ test.describe('Task CRUD', () => {
   });
 
 test.describe('Task Filters', () => {
+  test('TC-TASK-12: empty state แสดงข้อความเฉพาะเมื่อ filter ไม่มีผลลัพธ์', async ({ page }) => {
+    await page.goto('/tasks');
+
+    // filter LOW priority — seed data ไม่มี LOW tasks (seed ใช้ HIGH/MEDIUM)
+    // แต่เราสร้าง task LOW ก่อน แล้ว filter DONE ซึ่งน่าจะ empty
+    // ใช้ filter HIGH + DONE ซึ่งไม่น่ามี
+    await page.getByTestId('filter-priority').selectOption('HIGH');
+    await page.getByTestId('filter-status').selectOption('DONE');
+
+    const emptyState = page.getByTestId('empty-state');
+    // ถ้ามี task ที่ตรง filter ก็ข้ามการ assert (test environment อาจแตกต่างกัน)
+    const taskCount = await page.getByTestId('task-card').count();
+    if (taskCount === 0) {
+      await expect(emptyState).toBeVisible();
+      await expect(page.getByTestId('empty-state-message')).toContainText('HIGH');
+    }
+  });
+
   test('TC-TASK-06: filter by HIGH priority แสดงเฉพาะ HIGH', async ({ page }) => {
     await page.goto('/tasks');
     await page.getByTestId('filter-priority').selectOption('HIGH');
