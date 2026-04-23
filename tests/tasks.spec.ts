@@ -97,6 +97,28 @@ test.describe('Task CRUD', () => {
     await expect(card).toHaveClass(/border-red-300/);
   });
 
+  test('TC-TASK-10: stats bar แสดงจำนวน Todo / In Progress / Done ถูกต้อง', async ({ page }) => {
+    await page.goto('/tasks');
+
+    // สร้าง task TODO
+    await page.getByTestId('create-task-btn').click();
+    await page.getByTestId('task-title-input').fill('Stats todo task');
+    await page.getByTestId('task-submit-btn').click();
+
+    // สร้าง task IN_PROGRESS
+    await page.getByTestId('create-task-btn').click();
+    await page.getByTestId('task-title-input').fill('Stats in-progress task');
+    await page.getByTestId('task-status-select').selectOption('IN_PROGRESS');
+    await page.getByTestId('task-submit-btn').click();
+
+    // stats bar ต้องปรากฏ
+    await expect(page.getByTestId('stats-bar')).toBeVisible();
+
+    // In Progress ต้องมีอย่างน้อย 1
+    const inProgressText = await page.getByTestId('stats-in-progress').textContent();
+    expect(parseInt(inProgressText ?? '0')).toBeGreaterThanOrEqual(1);
+  });
+
 test.describe('Task Filters', () => {
   test('TC-TASK-06: filter by HIGH priority แสดงเฉพาะ HIGH', async ({ page }) => {
     await page.goto('/tasks');

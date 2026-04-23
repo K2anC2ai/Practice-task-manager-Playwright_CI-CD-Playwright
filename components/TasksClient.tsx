@@ -53,6 +53,8 @@ export default function TasksClient() {
 
   const stats = {
     total: tasks.length,
+    todo: tasks.filter((t) => t.status === 'TODO').length,
+    inProgress: tasks.filter((t) => t.status === 'IN_PROGRESS').length,
     done: tasks.filter((t) => t.status === 'DONE').length,
     high: tasks.filter((t) => t.priority === 'HIGH' && t.status !== 'DONE').length,
   };
@@ -102,6 +104,23 @@ export default function TasksClient() {
           <option value="DONE">Done</option>
         </select>
       </div>
+
+      {/* Stats bar */}
+      {tasks.length > 0 && (
+        <div data-testid="stats-bar" className="flex gap-4 mb-5 text-sm text-gray-500">
+          <span data-testid="stats-todo">
+            <span className="font-semibold text-gray-700">{stats.todo}</span> Todo
+          </span>
+          <span className="text-gray-300">·</span>
+          <span data-testid="stats-in-progress">
+            <span className="font-semibold text-blue-600">{stats.inProgress}</span> In Progress
+          </span>
+          <span className="text-gray-300">·</span>
+          <span data-testid="stats-done">
+            <span className="font-semibold text-green-600">{stats.done}</span> Done
+          </span>
+        </div>
+      )}
 
       {/* Modal */}
       {(showForm || editingTask) && (
