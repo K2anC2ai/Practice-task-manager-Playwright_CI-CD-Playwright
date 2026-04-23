@@ -10,11 +10,14 @@ import { test, expect } from '@playwright/test';
 test.describe('Tasks API — authenticated', () => {
   let createdTaskId: string;
 
-  test('TC-API-01: GET /api/tasks คืน array', async ({ request }) => {
+  test('TC-API-01: GET /api/tasks คืน paginated response', async ({ request }) => {
     const res = await request.get('/api/tasks');
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(Array.isArray(body)).toBe(true);
+    expect(Array.isArray(body.data)).toBe(true);
+    expect(typeof body.total).toBe('number');
+    expect(typeof body.page).toBe('number');
+    expect(typeof body.totalPages).toBe('number');
   });
 
   test('TC-API-02: POST /api/tasks สร้าง task และคืน 201', async ({ request }) => {
@@ -75,31 +78,46 @@ test.describe('Tasks API — authenticated', () => {
   test('TC-API-07: GET /api/tasks?priority=HIGH filter ถูกต้อง', async ({ request }) => {
     const res = await request.get('/api/tasks?priority=HIGH');
     expect(res.status()).toBe(200);
-    const tasks = await res.json();
-    tasks.forEach((t: { priority: string }) => {
+    const { data } = await res.json();
+    data.forEach((t: { priority: string }) => {
       expect(t.priority).toBe('HIGH');
     });
   });
 
   test('TC-API-11: GET /api/tasks?search= filter by title', async ({ request }) => {
     const unique = `SearchMe_${Date.now()}`;
-    // สร้าง task ที่มี title เฉพาะ
     await request.post('/api/tasks', { data: { title: unique } });
 
     const res = await request.get(`/api/tasks?search=${unique}`);
     expect(res.status()).toBe(200);
-    const tasks = await res.json();
-    expect(tasks.length).toBeGreaterThanOrEqual(1);
-    tasks.forEach((t: { title: string }) => {
+    const { data } = await res.json();
+    expect(data.length).toBeGreaterThanOrEqual(1);
+    data.forEach((t: { title: string }) => {
       expect(t.title).toContain(unique);
     });
   });
 
-  test('TC-API-12: GET /api/tasks?search=xxx ที่ไม่มีผลลัพธ์คืน array ว่าง', async ({ request }) => {
+  test('TC-API-12: GET /api/tasks?search=xxx ที่ไม่มีผลลัพธ์คืน data ว่าง', async ({ request }) => {
     const res = await request.get('/api/tasks?search=ZZZNOMATCHXYZ99999');
     expect(res.status()).toBe(200);
-    const tasks = await res.json();
-    expect(tasks).toEqual([]);
+    const { data, total } = await res.json();
+    expect(data).toEqual([]);
+    expect(total).toBe(0);
+  });
+
+  test('TC-API-13: GET /api/tasks?page=1&limit=2 คืน max 2 tasks', async ({ request }) => {
+    // สร้าง tasks มากพอ
+    for (let i = 0; i < 3; i++) {
+      await request.post('/api/tasks', { data: { title: `Paged task ${i}` } });
+    }
+
+    const res = await request.get('/api/tasks?page=1&limit=2');
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(body.data.length).toBeLessThanOrEqual(2);
+    expect(body.page).toBe(1);
+    expect(body.limit).toBe(2);
+    expect(body.totalPages).toBeGreaterThanOrEqual(1);
   });
 });
 

@@ -11,18 +11,27 @@ export async function GET(req: NextRequest) {
   const priority = searchParams.get('priority');
   const status = searchParams.get('status');
   const search = searchParams.get('search');
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '10', 10)));
 
-  const tasks = await prisma.task.findMany({
-    where: {
-      userId: (session.user as { id: string }).id,
-      ...(priority ? { priority } : {}),
-      ...(status ? { status } : {}),
-      ...(search ? { title: { contains: search } } : {}),
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+  const where = {
+    userId: (session.user as { id: string }).id,
+    ...(priority ? { priority } : {}),
+    ...(status ? { status } : {}),
+    ...(search ? { title: { contains: search } } : {}),
+  };
 
-  return NextResponse.json(tasks);
+  const [total, data] = await prisma.$transaction([
+    prisma.task.count({ where }),
+    prisma.task.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+  ]);
+
+  return NextResponse.json({ data, total, page, limit, totalPages: Math.ceil(total / limit) });
 }
 
 export async function POST(req: NextRequest) {

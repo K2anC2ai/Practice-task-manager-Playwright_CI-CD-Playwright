@@ -11,16 +11,23 @@ export default function TasksClient() {
   const [filterPriority, setFilterPriority] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterSearch, setFilterSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const LIMIT = 10;
 
   const fetchTasks = useCallback(async () => {
     const params = new URLSearchParams();
     if (filterPriority) params.set('priority', filterPriority);
     if (filterStatus) params.set('status', filterStatus);
     if (filterSearch) params.set('search', filterSearch);
+    params.set('page', String(page));
+    params.set('limit', String(LIMIT));
     const res = await fetch(`/api/tasks?${params}`);
-    setTasks(await res.json());
+    const json = await res.json();
+    setTasks(json.data);
+    setTotalPages(json.totalPages ?? 1);
     setLoading(false);
-  }, [filterPriority, filterStatus, filterSearch]);
+  }, [filterPriority, filterStatus, filterSearch, page]);
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
@@ -35,6 +42,9 @@ export default function TasksClient() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
+
+  // Reset page to 1 when any filter changes
+  useEffect(() => { setPage(1); }, [filterPriority, filterStatus, filterSearch]);
 
   const handleCreate = async (data: Partial<Task>) => {
     await fetch('/api/tasks', {
@@ -215,17 +225,43 @@ export default function TasksClient() {
           </p>
         </div>
       ) : (
-        <div data-testid="task-list" className="space-y-2">
-          {tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onComplete={handleComplete}
-              onEdit={() => setEditingTask(task)}
-              onDelete={() => handleDelete(task.id)}
-            />
-          ))}
-        </div>
+        <>
+          <div data-testid="task-list" className="space-y-2">
+            {tasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onComplete={handleComplete}
+                onEdit={() => setEditingTask(task)}
+                onDelete={() => handleDelete(task.id)}
+              />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div data-testid="pagination" className="flex items-center justify-center gap-4 mt-6">
+              <button
+                data-testid="pagination-prev"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1.5 text-sm border border-gray-200 rounded-xl disabled:opacity-40 hover:bg-gray-50 transition-colors"
+              >
+                ← Prev
+              </button>
+              <span data-testid="pagination-info" className="text-sm text-gray-500">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                data-testid="pagination-next"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-3 py-1.5 text-sm border border-gray-200 rounded-xl disabled:opacity-40 hover:bg-gray-50 transition-colors"
+              >
+                Next →
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
