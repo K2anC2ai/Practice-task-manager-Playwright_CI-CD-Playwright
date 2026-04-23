@@ -1,11 +1,13 @@
-# Task Manager — Full-Stack Playwright Showcase
+# Task Manager — Full-Stack App with Playwright CI/CD
 
-![CI](https://github.com/K2anC2ai/Practice-task-manager-Playwright_CI-CD-Playwright/actions/workflows/ci.yml/badge.svg)
-![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)
 ![Playwright](https://img.shields.io/badge/Playwright-1.49-45ba4b?logo=playwright&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-25-brightgreen)
-![Prisma](https://img.shields.io/badge/Prisma-5.22-2D3748?logo=prisma&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-5.22-2D3748?logo=prisma)
+![NextAuth](https://img.shields.io/badge/NextAuth-4.24-purple)
+![CI](https://github.com/K2anC2ai/Practice-task-manager-Playwright_CI-CD-Playwright/actions/workflows/ci.yml/badge.svg)
+![Tests](https://img.shields.io/badge/Tests-30+-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-blue)
 
 ---
 
@@ -13,280 +15,308 @@
 
 ### ภาพรวม
 
-โปรเจคนี้เป็น **Full-Stack Web Application** ที่สร้างขึ้นเพื่อโชว์สกิล QA Automation ระดับ senior แบบ end-to-end จริงๆ ตั้งแต่การสร้างแอป → เขียน test → รัน CI/CD อัตโนมัติ ต่างจากโปรเจคอื่นที่ test บนเว็บสำเร็จรูป โปรเจคนี้ **สร้างแอปเอง** แล้ว test เอง เหมือนงานจริงในบริษัท
+โปรเจคนี้เป็น showcase การเขียน **Playwright test** แบบครบวงจรบน Full-Stack application ที่สร้างขึ้นมาเอง ตั้งแต่ authentication, REST API, ไปจนถึง UI — พร้อม GitHub Actions CI/CD pipeline ที่รัน test อัตโนมัติทุกครั้งที่ push code
 
-### ทำไมโปรเจคนี้พิเศษ
-
-| จุดเด่น | รายละเอียด |
-|---------|-----------|
-| **สร้างแอปเอง** | Full-stack Next.js พร้อม auth, database, REST API |
-| **CI badge live** | ทุกครั้งที่ push ผลลัพธ์ test ขึ้น GitHub จริง |
-| **storageState** | Login ครั้งเดียว share ทุก test — ไม่ waste time login ซ้ำ |
-| **API + UI combined** | ทั้ง E2E UI test และ API test ในโปรเจคเดียว |
-| **data-testid** | Selector ที่ stable — ไม่แตกเมื่อ UI เปลี่ยน |
-| **Seed แบบ idempotent** | รัน seed กี่ครั้งก็ได้ผลเหมือนกัน — CI ปลอดภัย |
+ต่างจากโปรเจคอื่นที่ test บนเว็บสำเร็จรูป โปรเจคนี้ **สร้าง production-grade web app ขึ้นมาเอง** เพื่อแสดงให้เห็นว่า QA engineer สามารถ test ทั้ง API layer และ UI layer ได้อย่างไร บน codebase ที่ตัวเองรู้จักทุก corner
 
 ### Tech Stack
 
-| Layer | Technology | เหตุผล |
-|-------|-----------|--------|
-| **Frontend** | Next.js 14 App Router | Full-stack ในโปรเจคเดียว ไม่ต้องแยก repo |
-| **Database** | SQLite + Prisma ORM | Zero setup ใน CI, type-safe query |
-| **Auth** | NextAuth.js (JWT) | Production-ready, ใช้จริงในบริษัท |
-| **Styling** | Tailwind CSS | Utility-first, ไม่ต้องเขียน CSS เอง |
-| **Testing** | Playwright | E2E + API test ในเครื่องมือเดียว |
-| **CI/CD** | GitHub Actions | Free สำหรับ public repo, native badge |
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | Next.js 14 (App Router), Tailwind CSS |
+| **Backend** | Next.js API Routes (REST) |
+| **Database** | SQLite via Prisma ORM |
+| **Auth** | NextAuth.js (JWT + CredentialsProvider) |
+| **Testing** | Playwright 1.49 (UI + API) |
+| **CI/CD** | GitHub Actions |
+| **Language** | TypeScript 5.6 (strict mode) |
 
-### โครงสร้างโปรเจค
+### Features ที่ implement และ test แล้ว
 
-```
-task-manager/
-├── .github/
-│   └── workflows/
-│       └── ci.yml              # GitHub Actions pipeline
-├── app/
-│   ├── (auth)/
-│   │   ├── login/page.tsx      # หน้า login
-│   │   └── register/page.tsx   # หน้าสมัครสมาชิก
-│   ├── (dashboard)/
-│   │   ├── layout.tsx          # ป้องกัน route ที่ต้อง auth
-│   │   └── tasks/page.tsx      # หน้าหลัก task list
-│   └── api/
-│       ├── auth/[...nextauth]/ # NextAuth handler
-│       ├── register/           # POST /api/register
-│       └── tasks/              # GET, POST /api/tasks
-│           └── [id]/           # PUT, DELETE /api/tasks/:id
-├── components/
-│   ├── TasksClient.tsx         # CRUD logic (client component)
-│   ├── TaskCard.tsx            # Task item UI
-│   ├── TaskForm.tsx            # Create/Edit form
-│   ├── Navbar.tsx              # Top nav + logout
-│   └── SessionProvider.tsx     # NextAuth wrapper
-├── lib/
-│   ├── auth.ts                 # NextAuth config
-│   └── prisma.ts               # Prisma singleton
-├── prisma/
-│   ├── schema.prisma           # DB schema (User, Task)
-│   └── seed.ts                 # Deterministic test data
-├── tests/
-│   ├── setup/
-│   │   └── auth.setup.ts       # Login once → save storageState
-│   ├── auth.spec.ts            # 6 auth tests
-│   ├── tasks.spec.ts           # 8 UI CRUD tests
-│   └── api.spec.ts             # 11 API tests
-└── playwright.config.ts        # webServer + storageState config
-```
+โปรเจคนี้พัฒนาแบบ **iterative development cycle** — implement feature → เขียน test → commit → push ทีละอย่าง เหมือนงานจริงใน production team:
 
-### CI/CD ทำงานยังไง
+| # | Feature | Test IDs |
+|---|---------|----------|
+| 1 | **Overdue highlight** — task ที่เลยกำหนดแสดง red border + "Overdue" badge | TC-TASK-09 |
+| 2 | **Stats bar** — แสดง `N Todo · N In Progress · N Done` เหนือ task list | TC-TASK-10 |
+| 3 | **Confirm dialog before delete** — "Are you sure?" ก่อนลบ task | TC-TASK-11 |
+| 4 | **Filter-aware empty state** — "No HIGH priority tasks" แทน generic message | TC-TASK-12 |
+| 5 | **Keyboard shortcut "N"** — กด N เพื่อเปิด modal สร้าง task ใหม่ | TC-TASK-13, 13b |
+| 6 | **Real-time search** — search input กรอง task ตาม title ผ่าน `?search=` API | TC-TASK-14/15, TC-API-11/12 |
+| 7 | **Pagination** — `?page=&limit=` (default 10), มี Prev/Next controls | TC-API-13 |
+| 8 | **Task sort** — `?sortBy=(createdAt\|dueDate\|priority)&sortOrder=(asc\|desc)` | TC-API-14, TC-TASK-16 |
 
-```
-1. git push → GitHub รับ code
-2. GitHub Actions trigger ci.yml
-3. Install dependencies (npm ci)
-4. Generate Prisma client
-5. สร้าง SQLite database (prisma db push)
-6. Seed test data (tsx prisma/seed.ts)
-7. Install Playwright browser (chromium)
-8. Start Next.js dev server (webServer ใน playwright.config.ts)
-9. รัน Playwright tests (25 tests)
-10. Upload HTML report เป็น artifact
-11. Badge บน README เปลี่ยนเป็นสีเขียว ✓
-```
+### Playwright Testing Techniques
 
-**Badge ที่ขึ้น README** ดึงผลจาก GitHub Actions จริง — ไม่ใช่แค่รูปภาพ static:
+#### 1. storageState — Login Once, Reuse Everywhere
 
-```markdown
-![CI](https://github.com/USERNAME/REPO/actions/workflows/ci.yml/badge.svg)
-```
-
-### เทคนิค Senior ที่โชว์ในโปรเจคนี้
-
-#### 1. storageState — Login ครั้งเดียว ใช้ทุก Test
-
-ถ้า login ใหม่ทุก test: 25 tests × ~3 วินาที = **75 วินาทีเสียเปล่า**
-
-Playwright รองรับ `storageState` — บันทึก cookies + JWT token หลัง login แล้วโหลดซ้ำ:
+แทนที่จะ login ซ้ำทุก test (เสีย ~3 วินาทีต่อ test) ใช้ `setup` project ที่รัน login ครั้งเดียว แล้ว save session ไว้เป็น JSON:
 
 ```typescript
 // tests/setup/auth.setup.ts
-setup('authenticate', async ({ page }) => {
-  await page.goto('/login');
-  await page.getByTestId('login-email').fill('test@taskmanager.dev');
-  await page.getByTestId('login-password').fill('Test@1234');
-  await page.getByTestId('login-submit').click();
-  await page.waitForURL('/tasks');
-
-  // บันทึก session ลงไฟล์
-  await page.context().storageState({ path: 'tests/.auth/user.json' });
-});
+await page.fill('[data-testid="login-email"]', 'test@taskmanager.dev');
+await page.fill('[data-testid="login-password"]', 'Test@1234');
+await page.click('[data-testid="login-submit"]');
+await page.context().storageState({ path: 'tests/.auth/user.json' });
 ```
 
 ```typescript
 // playwright.config.ts
 projects: [
-  { name: 'setup', testMatch: /auth\.setup\.ts/ },
+  { name: 'setup', testMatch: /setup\/auth\.setup\.ts/ },
   {
     name: 'chromium',
-    use: { storageState: 'tests/.auth/user.json' }, // โหลด session
-    dependencies: ['setup'],                         // รัน setup ก่อน
+    use: { storageState: 'tests/.auth/user.json' },
+    dependencies: ['setup'],  // รอ setup ก่อนเสมอ
   },
-],
+]
 ```
 
-#### 2. test.use() Override — Unauthenticated Tests
+ประหยัดเวลา login ซ้ำสำหรับทุก test ที่ต้องการ authentication
 
-test บางตัวต้องการ fresh session (ไม่ login) เช่น verify redirect behavior:
+#### 2. Override storageState สำหรับ Unauthenticated Tests
+
+Auth tests ต้องการ session ว่างเปล่า — override ด้วย empty storageState:
 
 ```typescript
 // tests/auth.spec.ts
-test.use({ storageState: { cookies: [], origins: [] } }); // clear auth
+test.use({ storageState: { cookies: [], origins: [] } });
+```
 
-test('redirect to /login when not authenticated', async ({ page }) => {
-  await page.goto('/tasks');
-  await expect(page).toHaveURL('/login'); // ต้อง redirect
+ทำให้ test group เดียวกันสามารถมีทั้ง authenticated และ unauthenticated tests ได้
+
+#### 3. API Testing ด้วย `request` Fixture
+
+Test REST API โดยตรงโดยไม่ผ่าน browser — เร็วกว่าและ reliable กว่า UI click:
+
+```typescript
+test('TC-API-01: GET /api/tasks คืน paginated response', async ({ request }) => {
+  const res = await request.get('/api/tasks');
+  const body = await res.json();
+  expect(Array.isArray(body.data)).toBe(true);
+  expect(typeof body.total).toBe('number');
+  expect(body.totalPages).toBeGreaterThanOrEqual(1);
 });
 ```
 
-#### 3. API Testing ด้วย Authenticated Request
+`request` fixture ใช้ storageState เดียวกับ `page` → authenticated โดยอัตโนมัติ
 
-`request` fixture ของ Playwright ใช้ `storageState` เดียวกับ browser — ทำให้ test API ในสภาพ authenticated โดยไม่ต้องทำ login แยก:
+#### 4. data-testid Strategy
 
-```typescript
-test('GET /api/tasks คืน array', async ({ request }) => {
-  const res = await request.get('/api/tasks'); // มี session cookie อัตโนมัติ
-  expect(res.status()).toBe(200);
-  const tasks = await res.json();
-  expect(Array.isArray(tasks)).toBe(true);
-});
+ทุก interactive element ใช้ `data-testid` attribute แทน CSS selector:
+
+```
+login-email, login-password, login-submit, login-error
+task-card, task-title, task-complete-btn, task-edit-btn, task-delete-btn
+create-task-btn, task-title-input, task-description-input
+task-priority-select, task-status-select, task-due-date-input, task-submit-btn
+filter-priority, filter-status, search-input, sort-by, sort-order
+stats-bar, stats-todo, stats-in-progress, stats-done
+overdue-badge, confirm-dialog, confirm-delete-btn, confirm-cancel-btn
+pagination, pagination-prev, pagination-next, pagination-info
+empty-state, empty-state-message
 ```
 
-#### 4. webServer — Auto-start App ก่อน Test
+`data-testid` ไม่เปลี่ยนเมื่อ refactor CSS หรือ rename class → test stable มากกว่า
 
-ไม่ต้องรัน `npm run dev` เองก่อน test — Playwright จัดการให้:
+#### 5. webServer — Auto-start App ก่อนรัน Tests
 
 ```typescript
-// playwright.config.ts
 webServer: {
   command: 'npm run dev',
   url: 'http://localhost:3000',
-  reuseExistingServer: !process.env.CI, // CI: start fresh, local: reuse
+  reuseExistingServer: !process.env.CI,  // local: reuse, CI: always fresh
   timeout: 120_000,
-},
-```
-
-ใน CI มันจะ start server ใหม่เสมอ — ใน local ถ้า `localhost:3000` มีอยู่แล้วก็ใช้ต่อ
-
-#### 5. data-testid — Stable Selectors
-
-```tsx
-// ✅ ถูก: selector ที่ไม่แตกเมื่อ UI เปลี่ยน
-<button data-testid="create-task-btn">+ New task</button>
-<input data-testid="task-title-input" />
-<div data-testid="task-card">...</div>
-
-// ❌ ผิด: selector ที่แตกง่าย
-page.locator('.btn-primary')    // class เปลี่ยนได้
-page.locator('button:nth-child(2)') // order เปลี่ยนได้
-page.locator('text=New task')  // ภาษาเปลี่ยน, text เปลี่ยน
-```
-
-#### 6. Idempotent Seed — CI ปลอดภัย
-
-```typescript
-// prisma/seed.ts
-async function main() {
-  // ลบ test data เดิมออกก่อน (delete → recreate)
-  await prisma.task.deleteMany({ where: { user: { email: 'test@...' } } });
-  await prisma.user.deleteMany({ where: { email: 'test@...' } });
-
-  // สร้างใหม่
-  await prisma.user.create({ data: { email: 'test@...', tasks: { create: [...] } } });
 }
 ```
 
-รัน seed กี่ครั้งก็ได้ผลเหมือนกัน — CI รัน seed ทุกครั้งที่ pipeline เริ่ม
+ไม่ต้องรัน `npm run dev` แยกก่อน test — Playwright จัดการให้อัตโนมัติ
 
-### รายการ Test ทั้งหมด (25 tests)
+### Test Coverage ทั้งหมด (30+ tests)
 
-#### auth.spec.ts (6 tests)
-| Test | สิ่งที่ verify |
-|------|----------------|
-| TC-AUTH-01 | Login สำเร็จ → redirect /tasks |
-| TC-AUTH-02 | Password ผิด → error message |
-| TC-AUTH-03 | Register → auto-login → redirect /tasks |
-| TC-AUTH-04 | เข้า /tasks โดยไม่ login → redirect /login |
-| TC-AUTH-05 | Logout → redirect /login |
-| TC-AUTH-06 | Register email ซ้ำ → error 409 |
+#### Auth Tests (`tests/auth.spec.ts`)
+| Test ID | Scenario |
+|---------|----------|
+| TC-AUTH-01 | Login สำเร็จด้วย credentials ถูกต้อง |
+| TC-AUTH-02 | Login ล้มเหลวด้วย password ผิด |
+| TC-AUTH-03 | Login ล้มเหลวด้วย email ที่ไม่มีในระบบ |
+| TC-AUTH-04 | Redirect ไป login เมื่อเข้า /tasks โดยไม่ได้ login |
+| TC-AUTH-05 | Register user ใหม่สำเร็จ |
+| TC-AUTH-06 | Register ล้มเหลวเมื่อ email ซ้ำ |
 
-#### tasks.spec.ts (8 tests)
-| Test | สิ่งที่ verify |
-|------|----------------|
-| TC-TASK-01 | Create task → ปรากฏใน list |
-| TC-TASK-02 | Edit task title → อัปเดตใน list |
+#### API Tests (`tests/api.spec.ts`)
+| Test ID | Scenario |
+|---------|----------|
+| TC-API-01 | GET /api/tasks คืน paginated response (`data`, `total`, `page`, `totalPages`) |
+| TC-API-02 | POST /api/tasks สร้าง task คืน 201 |
+| TC-API-03 | POST /api/tasks ไม่มี title คืน 400 |
+| TC-API-04 | PUT /api/tasks/:id update status เป็น DONE |
+| TC-API-05 | DELETE /api/tasks/:id ลบ task |
+| TC-API-06 | PUT task ที่ไม่มีอยู่คืน 404 |
+| TC-API-07 | GET ?priority=HIGH filter ถูกต้อง |
+| TC-API-08 | GET /api/tasks ไม่ login คืน 401 |
+| TC-API-09 | POST /api/tasks ไม่ login คืน 401 |
+| TC-API-10 | POST /api/register สร้าง user ใหม่คืน 201 |
+| TC-API-11 | GET ?search= filter by title |
+| TC-API-12 | GET ?search=xxx ที่ไม่มีผลลัพธ์คืน data ว่าง |
+| TC-API-13 | GET ?page=1&limit=2 คืน max 2 tasks |
+| TC-API-14 | GET ?sortBy=dueDate&sortOrder=asc เรียงถูกต้อง |
+
+#### Task UI Tests (`tests/tasks.spec.ts`)
+| Test ID | Scenario |
+|---------|----------|
+| TC-TASK-01 | สร้าง task ใหม่ปรากฏใน list |
+| TC-TASK-02 | แก้ไข title ของ task |
 | TC-TASK-03 | Mark complete → card แสดง opacity-60 |
-| TC-TASK-04 | Delete task → หายจาก list |
-| TC-TASK-05 | Create task พร้อม description + status |
-| TC-TASK-06 | Filter HIGH priority → เห็นเฉพาะ HIGH |
-| TC-TASK-07 | Filter DONE status → เห็นเฉพาะ DONE |
-| TC-TASK-08 | Reset filter → เห็น task ทั้งหมด |
+| TC-TASK-04 | ลบ task ผ่าน confirm dialog |
+| TC-TASK-05 | สร้าง task พร้อม description + status IN_PROGRESS |
+| TC-TASK-06 | Filter by HIGH priority |
+| TC-TASK-07 | Filter by DONE status |
+| TC-TASK-08 | Reset filter แสดง task ทั้งหมด |
+| TC-TASK-09 | Task ที่ due date เลยกำหนดแสดง Overdue badge + red border |
+| TC-TASK-10 | Stats bar แสดงจำนวน Todo / In Progress / Done |
+| TC-TASK-11 | Confirm dialog ปรากฏเมื่อกด delete, Cancel ไม่ลบ |
+| TC-TASK-12 | Filter-aware empty state แสดงข้อความเฉพาะ |
+| TC-TASK-13 | กด "N" เปิด new task modal |
+| TC-TASK-13b | กด "N" ขณะอยู่ใน input ไม่ trigger shortcut |
+| TC-TASK-14 | Search input กรอง task ตาม title real-time |
+| TC-TASK-15 | Search ที่ไม่มี match แสดง empty state พร้อมข้อความ |
+| TC-TASK-16 | เปลี่ยน Sort field/order ทำให้ task list reload |
 
-#### api.spec.ts (11 tests)
-| Test | Endpoint | สิ่งที่ verify |
-|------|----------|----------------|
-| TC-API-01 | GET /api/tasks | 200 + array |
-| TC-API-02 | POST /api/tasks | 201 + created object |
-| TC-API-03 | POST /api/tasks (no title) | 400 |
-| TC-API-04 | PUT /api/tasks/:id | 200 + updated status |
-| TC-API-05 | DELETE /api/tasks/:id | 200 + success |
-| TC-API-06 | PUT task ที่ไม่มีอยู่ | 404 |
-| TC-API-07 | GET /api/tasks?priority=HIGH | filter ถูกต้อง |
-| TC-API-08 | GET /api/tasks (ไม่ login) | 401 |
-| TC-API-09 | POST /api/tasks (ไม่ login) | 401 |
-| TC-API-10 | POST /api/register | 201 + user object |
-| TC-API-11 | POST /api/register (email ซ้ำ) | 409 |
+### Architecture
 
-### วิธีรันบนเครื่อง
-
-```bash
-# 1. Clone และติดตั้ง
-git clone <repo-url>
-cd task-manager
-npm install
-
-# 2. ตั้งค่า environment
-cp .env.example .env
-# แก้ NEXTAUTH_SECRET ให้เป็น random string
-
-# 3. Setup database
-npx prisma generate
-npx prisma db push
-npx tsx prisma/seed.ts
-
-# 4. รัน app
-npm run dev
-# เปิด http://localhost:3000
-# login: test@taskmanager.dev / Test@1234
-
-# 5. รัน tests (ต้องมี app รันอยู่หรือ config webServer จัดการให้)
-npm test
-
-# ดู report
-npm run report
+```
+┌─────────────────────────────────────────────────┐
+│                  Browser (Playwright)            │
+│  UI Tests ──────► Next.js Pages & Components    │
+│  API Tests ─────► Next.js API Routes            │
+└──────────────────────────┬──────────────────────┘
+                           │
+             ┌─────────────▼────────────┐
+             │      Prisma ORM          │
+             │   (Query Builder +       │
+             │    Type Safety)          │
+             └─────────────┬────────────┘
+                           │
+             ┌─────────────▼────────────┐
+             │    SQLite Database       │
+             │  (prisma/dev.db)         │
+             └──────────────────────────┘
 ```
 
-### วิธีตั้งค่า CI/CD บน GitHub
+### โครงสร้างโปรเจค
+
+```
+task-manager/
+├── app/
+│   ├── (auth)/
+│   │   ├── login/page.tsx          # Login form
+│   │   └── register/page.tsx       # Register form
+│   ├── (dashboard)/
+│   │   └── tasks/page.tsx          # Tasks page (protected)
+│   └── api/
+│       ├── auth/[...nextauth]/     # NextAuth handler
+│       ├── register/route.ts       # POST /api/register
+│       └── tasks/
+│           ├── route.ts            # GET (paginated+filtered+sorted) / POST
+│           └── [id]/route.ts       # PUT / DELETE
+├── components/
+│   ├── TaskCard.tsx                # Task card + overdue badge
+│   ├── TaskForm.tsx                # Create/Edit modal form
+│   └── TasksClient.tsx             # Main client component (state, filters, pagination, sort)
+├── lib/
+│   ├── auth.ts                     # NextAuth config (CredentialsProvider + JWT)
+│   └── prisma.ts                   # Prisma client singleton
+├── prisma/
+│   ├── schema.prisma               # User + Task models
+│   └── seed.ts                     # Idempotent seed (test@taskmanager.dev)
+├── tests/
+│   ├── setup/auth.setup.ts         # Login once → save storageState
+│   ├── auth.spec.ts                # Auth flow tests (6 tests)
+│   ├── api.spec.ts                 # API tests (14 tests)
+│   └── tasks.spec.ts               # UI tests (16 tests)
+├── .github/workflows/ci.yml        # GitHub Actions CI pipeline
+├── playwright.config.ts
+├── next.config.js
+└── package.json
+```
+
+### CI/CD Pipeline (GitHub Actions)
+
+```yaml
+# .github/workflows/ci.yml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - Setup Node.js 20
+      - npm ci
+      - npx prisma generate        # สร้าง Prisma client
+      - npx prisma db push         # สร้าง schema ใน SQLite
+      - npx tsx prisma/seed.ts     # seed test user
+      - npx playwright install chromium
+      - npx playwright test        # รัน test ทั้งหมด
+      - Upload HTML report (artifact)
+```
+
+ทุก push และ pull request จะ trigger pipeline นี้อัตโนมัติ ผลลัพธ์ (pass/fail) แสดงใน badge ด้านบน
+
+### API Reference
+
+#### `GET /api/tasks`
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | number | 1 | หน้าที่ต้องการ |
+| `limit` | number | 10 | จำนวน task ต่อหน้า (max 100) |
+| `priority` | string | — | filter: HIGH / MEDIUM / LOW |
+| `status` | string | — | filter: TODO / IN_PROGRESS / DONE |
+| `search` | string | — | filter by title (contains) |
+| `sortBy` | string | createdAt | createdAt / dueDate / priority |
+| `sortOrder` | string | desc | asc / desc |
+
+**Response:**
+```json
+{
+  "data": [...],
+  "total": 25,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 3
+}
+```
+
+### วิธีรัน
 
 ```bash
-# 1. สร้าง repo บน GitHub แล้ว push
-git init && git add . && git commit -m "initial commit"
-git remote add origin https://github.com/USERNAME/REPO.git
-git push -u origin main
+# ติดตั้ง dependencies
+npm install
+npx prisma generate
+npx prisma db push
+npx tsx prisma/seed.ts     # สร้าง test user
 
-# 2. GitHub Actions รันอัตโนมัติทันที (ไม่ต้องตั้งค่าอะไรเพิ่ม)
-# ดูผลที่: https://github.com/USERNAME/REPO/actions
+# รัน dev server
+npm run dev                 # http://localhost:3000
 
-# 3. Badge จะ live ทันที — อัปเดต URL ใน README.md
-![CI](https://github.com/USERNAME/REPO/actions/workflows/ci.yml/badge.svg)
+# รัน tests (dev server ต้องรันก่อน หรือ Playwright จะ start ให้อัตโนมัติ)
+npx playwright test
+
+# รัน test เฉพาะไฟล์
+npx playwright test tests/api.spec.ts
+npx playwright test tests/auth.spec.ts
+npx playwright test tests/tasks.spec.ts
+
+# รัน headed mode (เห็น browser)
+npx playwright test --headed
+
+# ดู HTML report
+npx playwright show-report
+```
+
+**Test credentials (seed):**
+```
+Email:    test@taskmanager.dev
+Password: Test@1234
 ```
 
 ---
@@ -295,155 +325,55 @@ git push -u origin main
 
 ### Overview
 
-This project demonstrates a complete **senior QA workflow**: build a real full-stack app, write comprehensive Playwright tests (UI + API), and ship with a working CI/CD pipeline that runs tests automatically on every push.
+This project demonstrates **end-to-end Playwright testing** on a full-stack application built from scratch — covering authentication flows, REST API validation, and rich UI interactions, all wired to a GitHub Actions CI/CD pipeline that runs automatically on every push.
 
-### Architecture
-
-```mermaid
-graph TD
-    subgraph App["Next.js 14 Application"]
-        LP[Login Page]
-        RP[Register Page]
-        TP[Tasks Page]
-        subgraph API["REST API"]
-            AR[/api/auth]
-            RR[/api/register]
-            TR[/api/tasks]
-            TIR[/api/tasks/:id]
-        end
-    end
-
-    subgraph DB["Data Layer"]
-        PRM[Prisma ORM]
-        SQL[(SQLite)]
-        PRM --> SQL
-    end
-
-    subgraph Auth["Authentication"]
-        NA[NextAuth.js]
-        JWT[JWT Session]
-        NA --> JWT
-    end
-
-    subgraph Tests["Playwright Tests"]
-        SETUP[setup/auth.setup.ts\nLogin once → storageState]
-        AUTH[auth.spec.ts\n6 tests]
-        TASKS[tasks.spec.ts\n8 tests]
-        APITEST[api.spec.ts\n11 tests]
-    end
-
-    subgraph CI["GitHub Actions CI"]
-        GH[Push to GitHub]
-        ACT[ci.yml workflow]
-        DB2[Setup SQLite + Seed]
-        PW[Run Playwright]
-        RPT[Upload Report]
-        BADGE[Update Badge]
-    end
-
-    LP --> AR
-    RP --> RR
-    TP --> TR
-    TP --> TIR
-    AR --> NA
-    TR --> PRM
-    TIR --> PRM
-    RR --> PRM
-
-    SETUP --> AUTH
-    SETUP --> TASKS
-    SETUP --> APITEST
-
-    GH --> ACT
-    ACT --> DB2
-    DB2 --> PW
-    PW --> RPT
-    PW --> BADGE
-```
-
-### CI/CD Pipeline
-
-```mermaid
-sequenceDiagram
-    participant Dev as Developer
-    participant GH as GitHub
-    participant CI as GitHub Actions
-    participant DB as SQLite
-    participant App as Next.js App
-    participant PW as Playwright
-
-    Dev->>GH: git push origin main
-    GH->>CI: trigger ci.yml
-
-    CI->>CI: npm ci (install deps)
-    CI->>CI: prisma generate
-    CI->>DB: prisma db push (create schema)
-    CI->>DB: tsx seed.ts (create test user + tasks)
-    CI->>CI: playwright install chromium
-
-    CI->>App: npm run dev (webServer)
-    App-->>CI: ready on localhost:3000
-
-    CI->>PW: playwright test
-
-    Note over PW: setup project
-    PW->>App: POST /login (test@taskmanager.dev)
-    App-->>PW: session cookies
-    PW->>PW: save storageState → user.json
-
-    Note over PW: auth.spec (6 tests)
-    Note over PW: tasks.spec (8 tests)
-    Note over PW: api.spec (11 tests)
-
-    PW-->>CI: 25 passed ✓
-    CI->>GH: upload playwright-report artifact
-    GH->>GH: badge → green ✓
-```
-
-### Auth State Pattern
-
-```mermaid
-sequenceDiagram
-    participant Setup as auth.setup.ts
-    participant Auth as tasks.spec / api.spec
-    participant Unauth as auth.spec
-
-    Note over Setup: runs ONCE before all tests
-    Setup->>Setup: page.goto('/login')
-    Setup->>Setup: fill credentials
-    Setup->>Setup: waitForURL('/tasks')
-    Setup->>Setup: storageState → tests/.auth/user.json
-
-    Note over Auth: authenticated tests (storageState loaded)
-    Auth->>Auth: page already has session cookies
-    Auth->>Auth: request already has session cookies
-    Auth->>Auth: no login step needed → fast
-
-    Note over Unauth: unauthenticated tests
-    Unauth->>Unauth: test.use({ storageState: { cookies: [] } })
-    Unauth->>Unauth: fresh context, no session
-    Unauth->>Unauth: verify redirect to /login
-```
+Unlike other showcase projects that test against third-party websites, this one **owns the entire stack** — giving full control over test data, API contracts, and UI behaviour.
 
 ### Key Design Decisions
 
-**1. SQLite for CI** — No external database service needed. Prisma creates the file in CI, seeds it, and Playwright tests run against it. Zero configuration.
+**1. `storageState` for session sharing** — Login runs once in a dedicated `setup` project. All other tests inherit the session from a saved JSON file, saving ~3s per test that would otherwise be spent on login flows.
 
-**2. `storageState` over repeated login** — Login once in the setup project, serialize cookies to disk, load for every test. Saves ~3s per test × 19 authenticated tests = ~57 seconds on every CI run.
+**2. `data-testid` attributes everywhere** — Selectors are decoupled from CSS class names and DOM structure. Refactoring the UI never breaks the tests.
 
-**3. `webServer` in playwright.config** — The app starts automatically before tests and shuts down after. In CI, `reuseExistingServer: false` ensures a clean start. Locally, it reuses the running dev server.
+**3. `request` fixture for API tests** — REST endpoints are validated directly without browser overhead. The fixture automatically inherits `storageState`, so authenticated API calls work out of the box.
 
-**4. Separate `setup` project** — Playwright's `dependencies` system guarantees the auth setup runs before any tests that need auth state, even when running tests in parallel.
+**4. `webServer` config** — `reuseExistingServer: !process.env.CI` means locally you can have the dev server already running; in CI a fresh server starts automatically before any test runs.
 
-**5. `data-testid` attributes** — Every interactive element has a `data-testid`. This creates a contract between devs and QA: UI can be restyled freely without breaking tests.
+**5. Idempotent seed** — The seed script deletes and recreates the test user on every run, so CI always starts from a known state regardless of previous runs.
 
-**6. API tests use browser's session** — Since `storageState` applies to both `page` and `request`, API tests automatically include the session cookie — no separate auth flow for API testing.
+**6. Iterative feature development** — Every feature was implemented in a complete cycle: write code → write test → TypeScript check → commit → push. This mirrors a real sprint workflow and ensures every shipped feature has test coverage.
+
+### Architecture — Test Execution Flow
+
+```mermaid
+sequenceDiagram
+    participant GH as GitHub Actions
+    participant PW as Playwright
+    participant Setup as setup project
+    participant App as Next.js App
+    participant DB as SQLite
+
+    GH->>DB: prisma db push + seed
+    GH->>PW: npx playwright test
+
+    PW->>Setup: auth.setup.ts
+    Setup->>App: POST /api/auth/signin
+    App->>DB: verify credentials
+    Setup->>PW: save storageState → user.json
+
+    loop Each test file
+        PW->>App: request with session cookies
+        App->>DB: query/mutate
+        PW->>PW: assert response / UI state
+    end
+
+    PW->>GH: upload HTML report artifact
+```
 
 ### Requirements
 
-```bash
-Node.js 18+
-npm install
-npx prisma generate && npx prisma db push && npx tsx prisma/seed.ts
-npx playwright install chromium
-```
+- Node.js 18+
+- `npm install`
+- `npx prisma generate && npx prisma db push`
+- `npx tsx prisma/seed.ts`
+- `npx playwright install chromium`
