@@ -4,10 +4,22 @@ import { test, expect } from '@playwright/test';
  * Tasks UI Test Suite
  * ใช้ storageState จาก setup project → ไม่ต้อง login ซ้ำทุก test
  *
- * Pattern:
- * - สร้าง task ใหม่ทุก test เพื่อ test isolation
- * - ไม่ depend กับ seed data (อาจเปลี่ยนจาก test อื่น)
+ * beforeAll: ลบ tasks ทั้งหมดก่อนเริ่ม suite เพื่อ isolation จาก api.spec.ts
  */
+
+test.beforeAll(async ({ request }) => {
+  // ดึง tasks ทุกหน้า แล้วลบทิ้งหมด เพื่อให้ UI tests เริ่มจาก clean state
+  let page = 1;
+  while (true) {
+    const res = await request.get(`/api/tasks?page=${page}&limit=100`);
+    const { data } = await res.json();
+    if (!data || data.length === 0) break;
+    for (const task of data) {
+      await request.delete(`/api/tasks/${task.id}`);
+    }
+    page++;
+  }
+});
 
 test.describe('Task CRUD', () => {
   test('TC-TASK-01: สร้าง task ใหม่ปรากฏใน list', async ({ page }) => {
@@ -56,27 +68,27 @@ test.describe('Task CRUD', () => {
   test('TC-TASK-04: ลบ task แล้วหายออกจาก list', async ({ page }) => {
     await page.goto('/tasks');
 
+    const title = `Task to delete ${Date.now()}`;
     await page.getByTestId('create-task-btn').click();
-    await page.getByTestId('task-title-input').fill('Task to delete');
+    await page.getByTestId('task-title-input').fill(title);
     await page.getByTestId('task-submit-btn').click();
-    await expect(page.getByTestId('task-list')).toContainText('Task to delete');
+    await expect(page.getByTestId('task-list')).toContainText(title);
 
-    const countBefore = await page.getByTestId('task-card').count();
+    // newest task is first — delete it via confirm dialog
     await page.getByTestId('task-delete-btn').first().click();
-    // confirm dialog appears — click confirm
     await page.getByTestId('confirm-delete-btn').click();
 
-    await expect(page.getByTestId('task-card')).toHaveCount(countBefore - 1);
+    await expect(page.getByTestId('task-list')).not.toContainText(title);
   });
 
   test('TC-TASK-11: confirm dialog ปรากฏเมื่อกด delete และ cancel ไม่ลบ task', async ({ page }) => {
     await page.goto('/tasks');
 
+    const title = `Should not be deleted ${Date.now()}`;
     await page.getByTestId('create-task-btn').click();
-    await page.getByTestId('task-title-input').fill('Should not be deleted');
+    await page.getByTestId('task-title-input').fill(title);
     await page.getByTestId('task-submit-btn').click();
-
-    const countBefore = await page.getByTestId('task-card').count();
+    await expect(page.getByTestId('task-list')).toContainText(title);
 
     // กด delete — dialog ต้องปรากฏ
     await page.getByTestId('task-delete-btn').first().click();
@@ -85,7 +97,7 @@ test.describe('Task CRUD', () => {
     // กด cancel — task ยังอยู่
     await page.getByTestId('confirm-cancel-btn').click();
     await expect(page.getByTestId('confirm-dialog')).not.toBeVisible();
-    await expect(page.getByTestId('task-card')).toHaveCount(countBefore);
+    await expect(page.getByTestId('task-list')).toContainText(title);
   });
 
   test('TC-TASK-05: สร้าง task พร้อม description และ status IN_PROGRESS', async ({ page }) => {
