@@ -83,6 +83,20 @@ test.describe('Task CRUD', () => {
   });
 });
 
+  test('TC-TASK-09: task ที่ due date เลยกำหนดแสดง Overdue badge และ red border', async ({ page }) => {
+    await page.goto('/tasks');
+    await page.getByTestId('create-task-btn').click();
+
+    await page.getByTestId('task-title-input').fill('Past due task');
+    await page.getByTestId('task-due-date-input').fill('2020-01-01');
+    await page.getByTestId('task-submit-btn').click();
+
+    const card = page.getByTestId('task-card').first();
+    await expect(card.getByTestId('overdue-badge')).toBeVisible();
+    await expect(card.getByTestId('overdue-badge')).toHaveText('Overdue');
+    await expect(card).toHaveClass(/border-red-300/);
+  });
+
 test.describe('Task Filters', () => {
   test('TC-TASK-06: filter by HIGH priority แสดงเฉพาะ HIGH', async ({ page }) => {
     await page.goto('/tasks');

@@ -29,6 +29,7 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, onComplete, onEdit, onDelete }: TaskCardProps) {
   const isDone = task.status === 'DONE';
+  const isOverdue = !isDone && !!task.dueDate && new Date(task.dueDate) < new Date();
   const dueDate = task.dueDate
     ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
@@ -36,7 +37,7 @@ export default function TaskCard({ task, onComplete, onEdit, onDelete }: TaskCar
   return (
     <div
       data-testid="task-card"
-      className={`bg-white rounded-xl p-4 border border-gray-100 shadow-sm transition-opacity ${isDone ? 'opacity-60' : ''}`}
+      className={`bg-white rounded-xl p-4 border shadow-sm transition-opacity ${isDone ? 'opacity-60' : ''} ${isOverdue ? 'border-red-300' : 'border-gray-100'}`}
     >
       <div className="flex items-start gap-3">
         <button
@@ -67,6 +68,11 @@ export default function TaskCard({ task, onComplete, onEdit, onDelete }: TaskCar
               {task.status.replace('_', ' ')}
             </span>
             {dueDate && <span className="text-xs text-gray-400">Due {dueDate}</span>}
+            {isOverdue && (
+              <span data-testid="overdue-badge" className="text-xs px-2 py-0.5 rounded-full font-medium border bg-red-50 text-red-600 border-red-200">
+                Overdue
+              </span>
+            )}
           </div>
         </div>
 
