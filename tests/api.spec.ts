@@ -8,7 +8,6 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('Tasks API — authenticated', () => {
-  let createdTaskId: string;
 
   test('TC-API-01: GET /api/tasks คืน paginated response', async ({ request }) => {
     const res = await request.get('/api/tasks');
@@ -29,7 +28,6 @@ test.describe('Tasks API — authenticated', () => {
     expect(task.title).toBe('API created task');
     expect(task.priority).toBe('HIGH');
     expect(task.id).toBeTruthy();
-    createdTaskId = task.id;
   });
 
   test('TC-API-03: POST /api/tasks ไม่มี title คืน 400', async ({ request }) => {
@@ -103,6 +101,22 @@ test.describe('Tasks API — authenticated', () => {
     const { data, total } = await res.json();
     expect(data).toEqual([]);
     expect(total).toBe(0);
+  });
+
+  test('TC-API-14: GET /api/tasks?sortBy=dueDate&sortOrder=asc เรียงลำดับถูกต้อง', async ({ request }) => {
+    // สร้าง tasks ที่มี dueDate ต่างกัน
+    await request.post('/api/tasks', { data: { title: 'Sort task A', dueDate: '2025-01-01' } });
+    await request.post('/api/tasks', { data: { title: 'Sort task B', dueDate: '2025-06-01' } });
+
+    const res = await request.get('/api/tasks?sortBy=dueDate&sortOrder=asc&limit=100');
+    expect(res.status()).toBe(200);
+    const { data } = await res.json();
+
+    // กรองเฉพาะ task ที่มี dueDate
+    const withDueDate = data.filter((t: { dueDate: string | null }) => t.dueDate !== null);
+    for (let i = 1; i < withDueDate.length; i++) {
+      expect(new Date(withDueDate[i].dueDate).getTime()).toBeGreaterThanOrEqual(new Date(withDueDate[i - 1].dueDate).getTime());
+    }
   });
 
   test('TC-API-13: GET /api/tasks?page=1&limit=2 คืน max 2 tasks', async ({ request }) => {

@@ -165,6 +165,24 @@ test.describe('Keyboard Shortcuts', () => {
   });
 });
 
+test.describe('Task Sort', () => {
+  test('TC-TASK-16: เปลี่ยน sort ทำให้ task list reload', async ({ page }) => {
+    await page.goto('/tasks');
+
+    // เลือก sort by Due Date
+    await page.getByTestId('sort-by').selectOption('dueDate');
+    // task list ยังต้องปรากฏ (ไม่ crash)
+    await expect(page.getByTestId('task-list').or(page.getByTestId('empty-state'))).toBeVisible();
+
+    // toggle sort order
+    const btn = page.getByTestId('sort-order');
+    const beforeText = await btn.textContent();
+    await btn.click();
+    const afterText = await btn.textContent();
+    expect(afterText).not.toBe(beforeText);
+  });
+});
+
 test.describe('Task Search', () => {
   test('TC-TASK-14: search input กรอง task ตาม title แบบ real-time', async ({ page }) => {
     await page.goto('/tasks');

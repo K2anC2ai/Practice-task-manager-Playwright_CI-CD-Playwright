@@ -11,6 +11,8 @@ export default function TasksClient() {
   const [filterPriority, setFilterPriority] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterSearch, setFilterSearch] = useState('');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const LIMIT = 10;
@@ -20,6 +22,8 @@ export default function TasksClient() {
     if (filterPriority) params.set('priority', filterPriority);
     if (filterStatus) params.set('status', filterStatus);
     if (filterSearch) params.set('search', filterSearch);
+    params.set('sortBy', sortBy);
+    params.set('sortOrder', sortOrder);
     params.set('page', String(page));
     params.set('limit', String(LIMIT));
     const res = await fetch(`/api/tasks?${params}`);
@@ -27,7 +31,7 @@ export default function TasksClient() {
     setTasks(json.data);
     setTotalPages(json.totalPages ?? 1);
     setLoading(false);
-  }, [filterPriority, filterStatus, filterSearch, page]);
+  }, [filterPriority, filterStatus, filterSearch, sortBy, sortOrder, page]);
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
@@ -43,8 +47,8 @@ export default function TasksClient() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  // Reset page to 1 when any filter changes
-  useEffect(() => { setPage(1); }, [filterPriority, filterStatus, filterSearch]);
+  // Reset page to 1 when any filter or sort changes
+  useEffect(() => { setPage(1); }, [filterPriority, filterStatus, filterSearch, sortBy, sortOrder]);
 
   const handleCreate = async (data: Partial<Task>) => {
     await fetch('/api/tasks', {
@@ -143,6 +147,24 @@ export default function TasksClient() {
           <option value="IN_PROGRESS">In Progress</option>
           <option value="DONE">Done</option>
         </select>
+        <select
+          data-testid="sort-by"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="border border-gray-200 rounded-xl px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="createdAt">Sort: Created</option>
+          <option value="dueDate">Sort: Due Date</option>
+          <option value="priority">Sort: Priority</option>
+        </select>
+        <button
+          data-testid="sort-order"
+          onClick={() => setSortOrder((o) => o === 'asc' ? 'desc' : 'asc')}
+          title={`Currently: ${sortOrder}`}
+          className="border border-gray-200 rounded-xl px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          {sortOrder === 'asc' ? '↑ Asc' : '↓ Desc'}
+        </button>
       </div>
 
       {/* Stats bar */}

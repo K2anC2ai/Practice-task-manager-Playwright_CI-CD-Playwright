@@ -14,6 +14,13 @@ export async function GET(req: NextRequest) {
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '10', 10)));
 
+  const SORT_FIELDS = ['createdAt', 'dueDate', 'priority'] as const;
+  type SortField = typeof SORT_FIELDS[number];
+  const sortBy = (SORT_FIELDS.includes(searchParams.get('sortBy') as SortField)
+    ? searchParams.get('sortBy')
+    : 'createdAt') as SortField;
+  const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
+
   const where = {
     userId: (session.user as { id: string }).id,
     ...(priority ? { priority } : {}),
@@ -25,7 +32,7 @@ export async function GET(req: NextRequest) {
     prisma.task.count({ where }),
     prisma.task.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { [sortBy]: sortOrder },
       skip: (page - 1) * limit,
       take: limit,
     }),
