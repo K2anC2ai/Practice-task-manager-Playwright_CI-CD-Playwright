@@ -165,6 +165,37 @@ test.describe('Keyboard Shortcuts', () => {
   });
 });
 
+test.describe('Task Search', () => {
+  test('TC-TASK-14: search input กรอง task ตาม title แบบ real-time', async ({ page }) => {
+    await page.goto('/tasks');
+    const unique = `UniqueSearch_${Date.now()}`;
+
+    // สร้าง task ที่มีชื่อเฉพาะ
+    await page.getByTestId('create-task-btn').click();
+    await page.getByTestId('task-title-input').fill(unique);
+    await page.getByTestId('task-submit-btn').click();
+    await expect(page.getByTestId('task-list')).toContainText(unique);
+
+    // พิมพ์ใน search box
+    await page.getByTestId('search-input').fill(unique);
+
+    // รอ fetch ใหม่ — task ที่สร้างต้องยังปรากฏ
+    await expect(page.getByTestId('task-list')).toContainText(unique);
+
+    // task count ต้องลดลงหรือเท่ากับก่อน filter
+    const filtered = await page.getByTestId('task-card').count();
+    expect(filtered).toBeGreaterThanOrEqual(1);
+  });
+
+  test('TC-TASK-15: search ที่ไม่มี match แสดง empty state พร้อมข้อความ', async ({ page }) => {
+    await page.goto('/tasks');
+    await page.getByTestId('search-input').fill('ZZZNOMATCHXYZ99999');
+
+    await expect(page.getByTestId('empty-state')).toBeVisible();
+    await expect(page.getByTestId('empty-state-message')).toContainText('ZZZNOMATCHXYZ99999');
+  });
+});
+
 test.describe('Task Filters', () => {
   test('TC-TASK-12: empty state แสดงข้อความเฉพาะเมื่อ filter ไม่มีผลลัพธ์', async ({ page }) => {
     await page.goto('/tasks');

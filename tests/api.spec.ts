@@ -80,6 +80,27 @@ test.describe('Tasks API — authenticated', () => {
       expect(t.priority).toBe('HIGH');
     });
   });
+
+  test('TC-API-11: GET /api/tasks?search= filter by title', async ({ request }) => {
+    const unique = `SearchMe_${Date.now()}`;
+    // สร้าง task ที่มี title เฉพาะ
+    await request.post('/api/tasks', { data: { title: unique } });
+
+    const res = await request.get(`/api/tasks?search=${unique}`);
+    expect(res.status()).toBe(200);
+    const tasks = await res.json();
+    expect(tasks.length).toBeGreaterThanOrEqual(1);
+    tasks.forEach((t: { title: string }) => {
+      expect(t.title).toContain(unique);
+    });
+  });
+
+  test('TC-API-12: GET /api/tasks?search=xxx ที่ไม่มีผลลัพธ์คืน array ว่าง', async ({ request }) => {
+    const res = await request.get('/api/tasks?search=ZZZNOMATCHXYZ99999');
+    expect(res.status()).toBe(200);
+    const tasks = await res.json();
+    expect(tasks).toEqual([]);
+  });
 });
 
 test.describe('Tasks API — unauthenticated', () => {

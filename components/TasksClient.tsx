@@ -10,15 +10,17 @@ export default function TasksClient() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [filterPriority, setFilterPriority] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterSearch, setFilterSearch] = useState('');
 
   const fetchTasks = useCallback(async () => {
     const params = new URLSearchParams();
     if (filterPriority) params.set('priority', filterPriority);
     if (filterStatus) params.set('status', filterStatus);
+    if (filterSearch) params.set('search', filterSearch);
     const res = await fetch(`/api/tasks?${params}`);
     setTasks(await res.json());
     setLoading(false);
-  }, [filterPriority, filterStatus]);
+  }, [filterPriority, filterStatus, filterSearch]);
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
@@ -100,7 +102,15 @@ export default function TasksClient() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 mb-5">
+      <div className="flex gap-2 mb-5 flex-wrap">
+        <input
+          data-testid="search-input"
+          type="text"
+          placeholder="Search tasks..."
+          value={filterSearch}
+          onChange={(e) => setFilterSearch(e.target.value)}
+          className="border border-gray-200 rounded-xl px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[180px]"
+        />
         <select
           data-testid="filter-priority"
           value={filterPriority}
@@ -191,9 +201,11 @@ export default function TasksClient() {
         <div className="text-center py-16 text-gray-400 text-sm">Loading...</div>
       ) : tasks.length === 0 ? (
         <div data-testid="empty-state" className="text-center py-16 text-gray-400">
-          <p className="text-4xl mb-3">{filterPriority || filterStatus ? '🔍' : '✓'}</p>
+          <p className="text-4xl mb-3">{filterPriority || filterStatus || filterSearch ? '🔍' : '✓'}</p>
           <p data-testid="empty-state-message" className="text-sm">
-            {filterPriority && filterStatus
+            {filterSearch
+              ? `No tasks matching "${filterSearch}"`
+              : filterPriority && filterStatus
               ? `No ${filterPriority} priority tasks with status ${filterStatus.replace('_', ' ')}`
               : filterPriority
               ? `No ${filterPriority} priority tasks`

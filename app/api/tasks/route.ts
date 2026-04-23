@@ -10,12 +10,14 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const priority = searchParams.get('priority');
   const status = searchParams.get('status');
+  const search = searchParams.get('search');
 
   const tasks = await prisma.task.findMany({
     where: {
       userId: (session.user as { id: string }).id,
       ...(priority ? { priority } : {}),
       ...(status ? { status } : {}),
+      ...(search ? { title: { contains: search } } : {}),
     },
     orderBy: { createdAt: 'desc' },
   });
