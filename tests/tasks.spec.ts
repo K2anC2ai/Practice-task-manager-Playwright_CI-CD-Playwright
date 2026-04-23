@@ -140,6 +140,31 @@ test.describe('Task CRUD', () => {
     expect(parseInt(inProgressText ?? '0')).toBeGreaterThanOrEqual(1);
   });
 
+test.describe('Keyboard Shortcuts', () => {
+  test('TC-TASK-13: กด "n" เปิด new task modal', async ({ page }) => {
+    await page.goto('/tasks');
+    // modal ต้องปิดอยู่ก่อน
+    await expect(page.getByTestId('task-title-input')).not.toBeVisible();
+
+    // กด "n" ที่ body
+    await page.locator('body').press('n');
+
+    await expect(page.getByTestId('task-title-input')).toBeVisible();
+  });
+
+  test('TC-TASK-13b: กด "n" ขณะ focus อยู่ใน input ไม่เปิด modal', async ({ page }) => {
+    await page.goto('/tasks');
+    // เปิด modal ก่อนเพื่อให้มี input ให้ focus
+    await page.getByTestId('create-task-btn').click();
+    await page.getByTestId('task-title-input').focus();
+
+    // กด "n" ใน input — modal ที่เปิดอยู่แล้วต้องยังแสดงอยู่ (ไม่ double-open)
+    await page.getByTestId('task-title-input').press('n');
+    // input ต้องมีค่า "n" (typed ปกติ ไม่ trigger shortcut)
+    await expect(page.getByTestId('task-title-input')).toHaveValue('n');
+  });
+});
+
 test.describe('Task Filters', () => {
   test('TC-TASK-12: empty state แสดงข้อความเฉพาะเมื่อ filter ไม่มีผลลัพธ์', async ({ page }) => {
     await page.goto('/tasks');

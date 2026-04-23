@@ -22,6 +22,18 @@ export default function TasksClient() {
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
+  // "N" key opens new task modal (skip when typing in an input/textarea)
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (e.key === 'n' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+        setShowForm(true);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   const handleCreate = async (data: Partial<Task>) => {
     await fetch('/api/tasks', {
       method: 'POST',
