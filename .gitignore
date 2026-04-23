@@ -8,3 +8,4 @@ test-results/
 tests/.auth/
 .env
 .env.local
+tsconfig.tsbuildinfo

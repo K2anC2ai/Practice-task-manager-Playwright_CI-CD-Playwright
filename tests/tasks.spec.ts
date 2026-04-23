@@ -116,6 +116,7 @@ test.describe('Task CRUD', () => {
   });
 });
 
+test.describe('Task Features', () => {
   test('TC-TASK-09: task ที่ due date เลยกำหนดแสดง Overdue badge และ red border', async ({ page }) => {
     await page.goto('/tasks');
     await page.getByTestId('create-task-btn').click();
@@ -151,6 +152,7 @@ test.describe('Task CRUD', () => {
     const inProgressText = await page.getByTestId('stats-in-progress').textContent();
     expect(parseInt(inProgressText ?? '0')).toBeGreaterThanOrEqual(1);
   });
+});
 
 test.describe('Keyboard Shortcuts', () => {
   test('TC-TASK-13: กด "n" เปิด new task modal', async ({ page }) => {

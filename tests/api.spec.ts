@@ -165,7 +165,7 @@ test.describe('Register API', () => {
     expect(user.email).toContain('@test.dev');
   });
 
-  test('TC-API-11: POST /api/register email ซ้ำคืน 409', async ({ request }) => {
+  test('TC-API-15: POST /api/register email ซ้ำคืน 409', async ({ request }) => {
     const res = await request.post('/api/register', {
       data: { name: 'Dup', email: 'test@taskmanager.dev', password: 'Pass@1234' },
     });
